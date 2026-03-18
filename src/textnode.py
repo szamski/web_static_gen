@@ -1,5 +1,4 @@
 from enum import Enum
-from htmlnode import *
 
 class TextType(Enum):
     PLAIN = "plain"

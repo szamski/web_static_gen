@@ -1,12 +1,9 @@
 import unittest
 
-from htmlnode import HTMLNode, LeafNode, ParentNode, text_node_to_html_node
-from textnode import TextType, TextNode 
+from htmlnode import HTMLNode, LeafNode, ParentNode
+from converters import text_node_to_html_node
+from textnode import TextType, TextNode
 
-        # self.tag = tag
-        # self.value = value
-        # self.children = children
-        # self.props = prop
 
 class TestHTMLNode(unittest.TestCase):
     def test_eq(self):
@@ -23,11 +20,6 @@ class TestHTMLNode(unittest.TestCase):
         node = HTMLNode(props={"href": "https://google.com", "target": "_blank"})
         result = node.props_to_html()
         self.assertEqual(result, ' href="https://google.com" target="_blank"')
-
-    # def test_text_prop(self):   
-    #     node = HTMLNode("This is a text node", TextType.ITALIC, TextType.LINK)
-    #     node2 = HTMLNode("This is a text noodle", TextType.BOLD, TextType.LINK)
-    #     self.assertNotEqual(node.text_type, node2.text_type)
 
     def test_leaf_to_html_p(self):
         node = LeafNode("p", "Hello, world!")
