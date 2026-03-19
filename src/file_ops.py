@@ -4,9 +4,9 @@ from markdown_parser import markdown_to_html_node, extract_title
 
 def file_update():
     try:
-        if os.path.exists("public/"):
-            shutil.rmtree("public/")
-        shutil.copytree("static/", "public/")
+        if os.path.exists("docs/"):
+            shutil.rmtree("docs/")
+        shutil.copytree("static/", "docs/")
 
     except Exception as e:
         return f"Error: {e}"
