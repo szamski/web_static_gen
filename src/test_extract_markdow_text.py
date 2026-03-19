@@ -1,21 +1,34 @@
 import unittest
 
-from markdown_parser import extract_markdown_img, extract_markdown_url, markdown_to_blocks, block_to_block_type, BlokType, markdown_to_html_node
+from markdown_parser import (
+    extract_markdown_img,
+    extract_markdown_url,
+    markdown_to_blocks,
+    block_to_block_type,
+    BlokType,
+    markdown_to_html_node,
+    extract_title,
+)
+
 
 class TestExtractMarkdown(unittest.TestCase):
-
     def test_extract_markdown_images(self):
         matches = extract_markdown_img(
             "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png)"
         )
         self.assertListEqual([("image", "https://i.imgur.com/zjjcJKZ.png")], matches)
-    
+
     def test_extract_markdown_url(self):
         matches = extract_markdown_url(
             "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
         )
-        self.assertListEqual([("to boot dev", "https://www.boot.dev"), ("to youtube", "https://www.youtube.com/@bootdotdev")], matches)
-
+        self.assertListEqual(
+            [
+                ("to boot dev", "https://www.boot.dev"),
+                ("to youtube", "https://www.youtube.com/@bootdotdev"),
+            ],
+            matches,
+        )
 
     def test_markdown_to_blocks(self):
         md = """
@@ -37,8 +50,8 @@ This is the same paragraph on a new line
             ],
         )
 
-class TestBlockToBlockType(unittest.TestCase):
 
+class TestBlockToBlockType(unittest.TestCase):
     def test_heading_single_hash(self):
         self.assertEqual(block_to_block_type("# Heading"), BlokType.HEADING)
 
@@ -64,22 +77,32 @@ class TestBlockToBlockType(unittest.TestCase):
         self.assertEqual(block_to_block_type("> quote"), BlokType.QUOTE)
 
     def test_quote_multiline(self):
-        self.assertEqual(block_to_block_type("> line 1\n> line 2\n> line 3"), BlokType.QUOTE)
+        self.assertEqual(
+            block_to_block_type("> line 1\n> line 2\n> line 3"), BlokType.QUOTE
+        )
 
     def test_quote_missing_on_one_line(self):
-        self.assertEqual(block_to_block_type("> line 1\nno quote here\n> line 3"), BlokType.PARAGRAPH)
+        self.assertEqual(
+            block_to_block_type("> line 1\nno quote here\n> line 3"), BlokType.PARAGRAPH
+        )
 
     def test_unordered_list(self):
-        self.assertEqual(block_to_block_type("- item 1\n- item 2\n- item 3"), BlokType.UNORDERED_LIST)
+        self.assertEqual(
+            block_to_block_type("- item 1\n- item 2\n- item 3"), BlokType.UNORDERED_LIST
+        )
 
     def test_unordered_list_single(self):
         self.assertEqual(block_to_block_type("- only item"), BlokType.UNORDERED_LIST)
 
     def test_unordered_list_missing_dash(self):
-        self.assertEqual(block_to_block_type("- item 1\nno dash\n- item 3"), BlokType.PARAGRAPH)
+        self.assertEqual(
+            block_to_block_type("- item 1\nno dash\n- item 3"), BlokType.PARAGRAPH
+        )
 
     def test_ordered_list(self):
-        self.assertEqual(block_to_block_type("1. first\n2. second\n3. third"), BlokType.ORDERED_LIST)
+        self.assertEqual(
+            block_to_block_type("1. first\n2. second\n3. third"), BlokType.ORDERED_LIST
+        )
 
     def test_ordered_list_wrong_start(self):
         self.assertEqual(block_to_block_type("2. first\n3. second"), BlokType.PARAGRAPH)
@@ -88,14 +111,15 @@ class TestBlockToBlockType(unittest.TestCase):
         self.assertEqual(block_to_block_type("1. first\n3. second"), BlokType.PARAGRAPH)
 
     def test_paragraph(self):
-        self.assertEqual(block_to_block_type("Just a normal paragraph"), BlokType.PARAGRAPH)
+        self.assertEqual(
+            block_to_block_type("Just a normal paragraph"), BlokType.PARAGRAPH
+        )
 
     def test_paragraph_multiline(self):
         self.assertEqual(block_to_block_type("Line one\nLine two"), BlokType.PARAGRAPH)
 
 
 class TestMarkdownToHtmlNode(unittest.TestCase):
-
     def test_paragraph(self):
         node = markdown_to_html_node("Just a paragraph")
         self.assertEqual(node.tag, "div")
@@ -152,5 +176,29 @@ class TestMarkdownToHtmlNode(unittest.TestCase):
         self.assertEqual(node.children[2].tag, "ul")
 
 
+class TestExtractTitle(unittest.TestCase):
+    def test_simple_title(self):
+        self.assertEqual(extract_title("# Hello"), "Hello")
+
+    def test_title_with_trailing_whitespace(self):
+        self.assertEqual(extract_title("# Hello   "), "Hello")
+
+    def test_title_not_first_line(self):
+        md = "Some text\n\n# My Title\n\nMore text"
+        self.assertEqual(extract_title(md), "My Title")
+
+    def test_h2_is_not_h1(self):
+        with self.assertRaises(Exception):
+            extract_title("## Not a title")
+
+    def test_no_title_raises(self):
+        with self.assertRaises(Exception):
+            extract_title("Just a paragraph\n\nAnother one")
+
+    def test_title_with_longer_text(self):
+        self.assertEqual(extract_title("# The Great Gatsby"), "The Great Gatsby")
+
+
 if __name__ == "__main__":
     unittest.main()
+

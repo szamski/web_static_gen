@@ -4,6 +4,7 @@ from enum import Enum
 from htmlnode import HTMLNode, LeafNode, ParentNode
 from converters import text_node_to_html_node
 
+
 class BlokType(Enum):
     PARAGRAPH = "paragraph"
     HEADING = "heading"
@@ -12,9 +13,11 @@ class BlokType(Enum):
     UNORDERED_LIST = "unordered_list"
     ORDERED_LIST = "ordered_list"
 
+
 def extract_markdown_img(text):
     matches = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
     return matches
+
 
 def extract_markdown_url(text):
     matches = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
@@ -34,7 +37,6 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             if len(parts) % 2 == 0:
                 raise Exception
             for i, part in enumerate(parts):
-
                 if part == "":
                     continue
                 if i % 2 == 0:
@@ -111,10 +113,9 @@ def markdown_to_blocks(markdown):
     return new_md
 
 
-    
 def block_to_block_type(markdown):
     if re.match(r"^#{1,6} ", markdown):
-        return BlokType.HEADING 
+        return BlokType.HEADING
     if markdown.startswith("```") and markdown.endswith("```"):
         return BlokType.CODE
     if markdown.startswith(">"):
@@ -129,9 +130,10 @@ def block_to_block_type(markdown):
         lines = markdown.split("\n")
         if all(line.startswith(f"{i + 1}. ") for i, line in enumerate(lines)):
             return BlokType.ORDERED_LIST
-    
+
     return BlokType.PARAGRAPH
-    
+
+
 def markdown_to_html_node(markdown):
 
     blocks = markdown_to_blocks(markdown)
@@ -145,16 +147,16 @@ def markdown_to_html_node(markdown):
             level = len(a[0])
             text = a[1]
             html_nodes.append(ParentNode(f"h{level}", text_to_children(text)))
-        
+
         if block_type == BlokType.CODE:
-            text =  block.strip("```").strip("\n")
+            text = block.strip("```").strip("\n")
             text_node = TextNode(text, TextType.CODE)
             html_nodes.append(ParentNode("pre", [text_node_to_html_node(text_node)]))
 
         if block_type == BlokType.QUOTE:
             lines = block.split("\n", -1)
             stripped = [line.lstrip("> ") for line in lines]
-            text =  "\n".join(stripped)
+            text = "\n".join(stripped)
             html_nodes.append(ParentNode("blockquote", text_to_children(text)))
 
         if block_type == BlokType.UNORDERED_LIST:
@@ -164,7 +166,7 @@ def markdown_to_html_node(markdown):
                 text = line.lstrip("- ")
                 li_nodes.append(ParentNode("li", text_to_children(text)))
             html_nodes.append(ParentNode("ul", li_nodes))
-        
+
         if block_type == BlokType.ORDERED_LIST:
             lines = block.split("\n", -1)
             li_nodes = []
@@ -175,14 +177,18 @@ def markdown_to_html_node(markdown):
 
         if block_type == BlokType.PARAGRAPH:
             html_nodes.append(ParentNode("p", text_to_children(block)))
-        
+
     return ParentNode("div", html_nodes)
-        
 
 
+def extract_title(markdown):
+    lines = markdown.split("\n", -1)
 
-
-        
+    for line in lines:
+        if line.startswith("# "):
+            stripped = line.split(" ", 1)
+            return stripped[1].strip(" ")
+    raise Exception
 
 
 def text_to_children(text):
@@ -195,5 +201,3 @@ def text_to_children(text):
         node = text_node_to_html_node(child)
         children.append(node)
     return children
-
-
