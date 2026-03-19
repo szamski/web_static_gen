@@ -12,7 +12,7 @@ def file_update():
         return f"Error: {e}"
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
 
     print(f"Generating page from {from_path} to {dest_path} using {template_path}.")
 
@@ -24,8 +24,11 @@ def generate_page(from_path, template_path, dest_path):
 
         text = extract_title(file_content_md)
         html = markdown_to_html_node(file_content_md).to_html()
-        completed = file_content_template.replace("{{ Title }}", text).replace(
-            "{{ Content }}", html
+        completed = (
+            file_content_template.replace("{{ Title }}", text)
+            .replace("{{ Content }}", html)
+            .replace('href="/', f'href="{basepath}/')
+            .replace('src="/', f'src="{basepath}/')
         )
 
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
@@ -36,7 +39,7 @@ def generate_page(from_path, template_path, dest_path):
         return f"Error {e}"
 
 
-def generate_pages_recursive(content_path, template_path, dest_path):
+def generate_pages_recursive(content_path, template_path, dest_path, basepath):
 
     try:
         for dirpath, dirnames, filenames in os.walk(content_path):
@@ -45,7 +48,7 @@ def generate_pages_recursive(content_path, template_path, dest_path):
                     src = os.path.join(dirpath, filename)
                     rel = os.path.relpath(src, content_path)
                     dest = os.path.join(dest_path, rel.replace(".md", ".html"))
-                    generate_page(src, template_path, dest)
+                    generate_page(src, template_path, dest, basepath)
 
     except Exception as e:
         return f"Error {e}"
